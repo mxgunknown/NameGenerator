@@ -27,7 +27,7 @@
           <input id="lastName" type="text" placeholder="e.g. Carter" autocomplete="family-name">
         </label>
         <label class="field">
-          <span>Select list</span>
+          <span>Select gender</span>
           <select id="genderSelect">
             <option value="boys">Boys names</option>
             <option value="girls">Girls names</option>
@@ -52,7 +52,7 @@
           <p class="eyebrow">Results</p>
           <h2>Generated names</h2>
         </div>
-        <span id="datasetLabel" class="pill">Loading name lists…</span>
+        <span id="datasetLabel" class="pill">Loading name listsâ€¦</span>
       </div>
       <div class="table-wrap">
         <table class="data-table">
@@ -64,7 +64,7 @@
             </tr>
           </thead>
           <tbody id="generatedBody">
-            <tr><td colspan="3" class="muted">Waiting to generate…</td></tr>
+            <tr><td colspan="3" class="muted">Waiting to generateâ€¦</td></tr>
           </tbody>
         </table>
       </div>
@@ -76,7 +76,7 @@
           <p class="eyebrow">Reference</p>
           <h2>Common names</h2>
         </div>
-        <span id="commonLabel" class="pill">–</span>
+        <span id="commonLabel" class="pill">â€“</span>
       </div>
       <div class="table-wrap">
         <table class="data-table">
@@ -87,7 +87,7 @@
             </tr>
           </thead>
           <tbody id="commonBody">
-            <tr><td colspan="2" class="muted">Waiting to generate…</td></tr>
+            <tr><td colspan="2" class="muted">Waiting to generateâ€¦</td></tr>
           </tbody>
         </table>
       </div>
@@ -161,7 +161,7 @@
       }
 
       const rows = names.map((name, index) => {
-        const fullLast = lastName ? lastName : '—';
+        const fullLast = lastName ? lastName : 'â€”';
         return `<tr><td>${index + 1}</td><td>${name}</td><td>${fullLast}</td></tr>`;
       });
       generatedBody.innerHTML = rows.join('');
@@ -170,7 +170,7 @@
     function renderCommon(names) {
       if (!names.length) {
         commonBody.innerHTML = '<tr><td colspan="2" class="muted">No names available.</td></tr>';
-        commonLabel.textContent = '–';
+        commonLabel.textContent = 'â€“';
         return;
       }
       const common = names.slice(0, 10);
@@ -184,7 +184,7 @@
       const count = Number(countSelect.value);
       const lastName = lastNameInput.value.trim();
 
-      setStatus('Generating…');
+      setStatus('Generatingâ€¦');
       const names = await loadNames(type);
 
       if (!names.length) return;
@@ -192,7 +192,7 @@
       const selection = shuffle(names).slice(0, Math.min(count, names.length));
       renderGenerated(selection, lastName);
       renderCommon(names);
-      datasetLabel.textContent = `${type === 'boys' ? 'Boys' : 'Girls'} list • ${names.length} names loaded`;
+      datasetLabel.textContent = `${type === 'boys' ? 'Boys' : 'Girls'} list â€¢ ${names.length} names loaded`;
       setStatus(`Showing ${selection.length} ${type} name${selection.length === 1 ? '' : 's'}`);
     }
 
@@ -206,3 +206,4 @@
   </script>
 </body>
 </html>
+
