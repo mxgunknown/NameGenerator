@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby Name Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="backdrop">
+    <span class="orb orb-a"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-c"></span>
+  </div>
+
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Naming made easy</p>
+      <h1>Discover the perfect baby name</h1>
+      <p class="lede">Pick a style, set your list size, and generate curated first+last name combinations in one click.</p>
+    </header>
+
+    <section class="card">
+      <div class="form-grid">
+        <label class="field">
+          <span>Desired last name (optional)</span>
+          <input id="lastName" type="text" placeholder="e.g. Carter" autocomplete="family-name">
+        </label>
+        <label class="field">
+          <span>Select list</span>
+          <select id="genderSelect">
+            <option value="boys">Boys names</option>
+            <option value="girls">Girls names</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>How many names</span>
+          <select id="countSelect">
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+      </div>
+      <button id="generateBtn" class="primary">Generate names</button>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Results</p>
+          <h2>Generated names</h2>
+        </div>
+        <span id="datasetLabel" class="pill">Loading name lists…</span>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>First name</th>
+              <th>Last name</th>
+            </tr>
+          </thead>
+          <tbody id="generatedBody">
+            <tr><td colspan="3" class="muted">Waiting to generate…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Reference</p>
+          <h2>Common names</h2>
+        </div>
+        <span id="commonLabel" class="pill">–</span>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>First name</th>
+            </tr>
+          </thead>
+          <tbody id="commonBody">
+            <tr><td colspan="2" class="muted">Waiting to generate…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const files = {
+      boys: 'boys_names.txt',
+      girls: 'girls_names.txt'
+    };
+
+    const nameCache = {
+      boys: null,
+      girls: null
+    };
+
+    const genderSelect = document.getElementById('genderSelect');
+    const countSelect = document.getElementById('countSelect');
+    const lastNameInput = document.getElementById('lastName');
+    const statusEl = document.getElementById('status');
+    const datasetLabel = document.getElementById('datasetLabel');
+    const commonLabel = document.getElementById('commonLabel');
+    const generatedBody = document.getElementById('generatedBody');
+    const commonBody = document.getElementById('commonBody');
+    const generateBtn = document.getElementById('generateBtn');
+
+    function parseNames(text) {
+      return text
+        .split(/\r?\n/)
+        .map((name) => name.trim())
+        .filter(Boolean);
+    }
+
+    async function loadNames(type) {
+      if (nameCache[type]) return nameCache[type];
+
+      try {
+        const response = await fetch(files[type]);
+        if (!response.ok) {
+          throw new Error('Unable to load ' + files[type]);
+        }
+        const text = await response.text();
+        const names = parseNames(text);
+        nameCache[type] = names;
+        return names;
+      } catch (err) {
+        setStatus(err.message, true);
+        return [];
+      }
+    }
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.classList.toggle('error', isError);
+    }
+
+    function shuffle(array) {
+      const result = [...array];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function renderGenerated(names, lastName) {
+      if (!names.length) {
+        generatedBody.innerHTML = '<tr><td colspan="3" class="muted">No names available.</td></tr>';
+        return;
+      }
+
+      const rows = names.map((name, index) => {
+        const fullLast = lastName ? lastName : '—';
+        return `<tr><td>${index + 1}</td><td>${name}</td><td>${fullLast}</td></tr>`;
+      });
+      generatedBody.innerHTML = rows.join('');
+    }
+
+    function renderCommon(names) {
+      if (!names.length) {
+        commonBody.innerHTML = '<tr><td colspan="2" class="muted">No names available.</td></tr>';
+        commonLabel.textContent = '–';
+        return;
+      }
+      const common = names.slice(0, 10);
+      const rows = common.map((name, index) => `<tr><td>${index + 1}</td><td>${name}</td></tr>`);
+      commonBody.innerHTML = rows.join('');
+      commonLabel.textContent = `${common.length} common picks`;
+    }
+
+    async function generate() {
+      const type = genderSelect.value;
+      const count = Number(countSelect.value);
+      const lastName = lastNameInput.value.trim();
+
+      setStatus('Generating…');
+      const names = await loadNames(type);
+
+      if (!names.length) return;
+
+      const selection = shuffle(names).slice(0, Math.min(count, names.length));
+      renderGenerated(selection, lastName);
+      renderCommon(names);
+      datasetLabel.textContent = `${type === 'boys' ? 'Boys' : 'Girls'} list • ${names.length} names loaded`;
+      setStatus(`Showing ${selection.length} ${type} name${selection.length === 1 ? '' : 's'}`);
+    }
+
+    generateBtn.addEventListener('click', generate);
+
+    (async function primeLists() {
+      await Promise.all([loadNames('boys'), loadNames('girls')]);
+      datasetLabel.textContent = 'Ready to generate';
+      setStatus('Pick your options and generate.');
+    })();
+  </script>
+</body>
+</html>
